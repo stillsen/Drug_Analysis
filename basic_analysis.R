@@ -67,7 +67,7 @@ result_df <- data.frame('mean' = mean_vec, 'std_error' = stde_vec, 'drug' = drug
 detach(df)
 attach(result_df)
 
-ggplot(result_df, aes(x=mean, y=drug, colour=drug)) +
-    geom_errorbar(aes(ymin=mean-std_error, ymax=mean+std_error), width=.1) +
-    geom_line() +
-    geom_point()
+ggplot(data = result_df) +
+    #geom_errorbar(aes(ymin=mean-std_error, ymax=mean+std_error), width=.1) +
+    #geom_line() +
+    geom_point(mapping = aes(x=mean, y=drug, colour=drug))
