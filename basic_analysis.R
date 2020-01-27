@@ -8,7 +8,7 @@ filename <- 'reordered.csv'
 abs_filename <- paste(path, '/', filename, sep='')
 
 # read csv, which is actually tsv ^^
-df <- read.table(abs_filename, sep='\t', header=TRUE)
+df <- read.table(abs_filename, sep='\t', header=TRUE, default.stringsAsFactors())
 # forget about zero filled first column
 df <- df[,-1]
 
