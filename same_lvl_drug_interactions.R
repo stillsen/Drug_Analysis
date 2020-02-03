@@ -4,7 +4,7 @@
 # Created on: 01.02.20
 
 library('plotrix')
-library('ggplot2')
+# library('ggplot2')
 
 path <- '/home/stillsen/Documents/Uni/HiWi/Source/Drug_Analysis'
 filename <- 'reordered.csv'
@@ -29,56 +29,56 @@ stde_vec <- c()
 drug_vec <- c()
 lvls = c(1,2,3)
 
-df[is.na(df)] <- 0
+# replace all NAs with 0 from the interaction part (col 1-8)
+df_int <- df[, 1:8]
+df_int[is.na(df_int)] <- 0
+df <- cbind(df_int,df[,9:12])
+
 # all lvl =1  drug interactions
 decimals = seq(1,255)
 m <- t(sapply(decimals,function(x){ as.integer(intToBits(x)[1:8])}))
 
-select <- append(m[1,],c(1,1,1,1))
-sub_df <- df[which(AMP==select[1] & CPR==select[2] & is.na(DOX) & is.na(ERY) & is.na(FOX) & is.na(FUS) & is.na(STR) & is.na(TMP)),]
+attach(df)
+# mean_per_lvl <- list()
+# stde_per_lvl <- list()
+mean_per_lvl <- c()
+stde_per_lvl <- c()
+lvl_vec <- c()
+interaction_vec <- c()
+for (lvl in lvls){
+  print(lvl)
+  values_per_lvl <- list()
+  # loop over interaction matrix
+  for (n in 1:nrow(m)){
+    # select interaction and multiply with lvl
+    # and subset df for those interactions
+    select <- m[n,]
+    no_interactions <- sum(select)
+    select <- select*lvl
+    sub_df <- df[which(AMP==select[1] & CPR==select[2] & DOX==select[3] & ERY==select[4] & FOX==select[5] & FUS==select[6] & STR==select[7] & TMP==select[8]),]
 
-# mean_lvl <- list()
-# stde_lvl <- list()
-# mean_lvl <- c()
-# stde_lvl <- c()
-# lvl_vec <- c()
-
-
-
-for (i in lvls){
-  for (drug in drugs){
-    print(i)
-    print(drug)
-    attach(df)
-    # cerate sub dataframe respectively
-    switch(drug,
-           'AMP'={sub_df <- df[which(AMP==i & is.na(CPR) & is.na(DOX) & is.na(ERY) & is.na(FOX) & is.na(FUS) & is.na(STR) & is.na(TMP)),]},
-           'CPR'={sub_df <- df[which(is.na(AMP) & CPR==i & is.na(DOX) & is.na(ERY) & is.na(FOX) & is.na(FUS) & is.na(STR) & is.na(TMP)),]},
-           'DOX'={sub_df <- df[which(is.na(AMP) & is.na(CPR) & DOX==i & is.na(ERY) & is.na(FOX) & is.na(FUS) & is.na(STR) & is.na(TMP)),]},
-           'ERY'={sub_df <- df[which(is.na(AMP) & is.na(CPR) & is.na(DOX) & ERY==i & is.na(FOX) & is.na(FUS) & is.na(STR) & is.na(TMP)),]},
-           'FOX'={sub_df <- df[which(is.na(AMP) & is.na(CPR) & is.na(DOX) & is.na(ERY) & FOX==i & is.na(FUS) & is.na(STR) & is.na(TMP)),]},
-           'FUS'={sub_df <- df[which(is.na(AMP) & is.na(CPR) & is.na(DOX) & is.na(ERY) & is.na(FOX) & FUS==i & is.na(STR) & is.na(TMP)),]},
-           'STR'={sub_df <- df[which(is.na(AMP) & is.na(CPR) & is.na(DOX) & is.na(ERY) & is.na(FOX) & is.na(FUS) & STR==i & is.na(TMP)),]},
-           'TMP'={sub_df <- df[which(is.na(AMP) & is.na(CPR) & is.na(DOX) & is.na(ERY) & is.na(FOX) & is.na(FUS) & is.na(STR) & TMP==i),]},
-            {print('default')}
-    )
-    # convert it's fake char column to numeric
-    detach(df)
-    sub_df <- transform(sub_df, trial_3=as.numeric(sub_df$trial_3))
-    # compute mean and std error over all trials for a certain druf and add it to a vector
-    mean_vec <- append(mean_vec, mean( append(append(sub_df$trial_1, sub_df$trial_2), (sub_df$trial_3)) ))
-    stde_vec <- append(stde_vec, std.error( append(append(sub_df$trial_1, sub_df$trial_2), sub_df$trial_3) ))
+    values_per_lvl[[no_interactions]] <- unlist(append(values_per_lvl[no_interactions], sub_df$trial_1))
+    values_per_lvl[[no_interactions]] <- unlist(append(values_per_lvl[no_interactions], sub_df$trial_2))
+    values_per_lvl[[no_interactions]] <- unlist(append(values_per_lvl[no_interactions], sub_df$trial_3))
   }
-  mean_lvl <- append(mean_lvl,mean_vec)
-  stde_lvl <- append(stde_lvl, stde_vec)
-  lvl_vec <- append(lvl_vec, rep(i, length(drugs)))
-  mean_vec <- c()
-  stde_vec <- c()
+  # mean_per_lvl[[lvl]] <- c( mean(unlist(values_per_lvl[1])),mean(unlist(values_per_lvl[2])),mean(unlist(values_per_lvl[3])),mean(unlist(values_per_lvl[4])),mean(unlist(values_per_lvl[5])))
+  # stde_per_lvl[[lvl]] <- c( std.error(unlist(values_per_lvl[1])),std.error(unlist(values_per_lvl[2])),std.error(unlist(values_per_lvl[3])),std.error(unlist(values_per_lvl[4])),std.error(unlist(values_per_lvl[5])))
+  mean_per_lvl <- append(mean_per_lvl, c( mean(unlist(values_per_lvl[1])),mean(unlist(values_per_lvl[2])),mean(unlist(values_per_lvl[3])),mean(unlist(values_per_lvl[4])),mean(unlist(values_per_lvl[5]))))
+  stde_per_lvl <- append(stde_per_lvl, c( std.error(unlist(values_per_lvl[1])),std.error(unlist(values_per_lvl[2])),std.error(unlist(values_per_lvl[3])),std.error(unlist(values_per_lvl[4])),std.error(unlist(values_per_lvl[5]))))
+  lvl_vec <- append(lvl_vec, c(lvl, lvl, lvl, lvl, lvl))
+  interaction_vec <- append(interaction_vec, c(1,2,3,4,5))
 }
+result_df <- data.frame('mean' = mean_per_lvl,
+                        'std_error' = stde_per_lvl,
+                        'interactions' = interaction_vec,
+                        'lvl'=lvl_vec,
+                        stringsAsFactors = FALSE)
 
-# # wrapping all up
-# result_df <- data.frame('mean' = mean_lvl,
-#                         'std_error' = stde_lvl,
-#                         'lvl'=lvl_vec,
-#                         'drug' = rep(drugs,3),
-#                         stringsAsFactors = FALSE)
+print(result_df)
+detach(df)
+attach(result_df)
+
+ggplot(data = result_df) +
+  geom_errorbar(mapping = aes(ymin=mean-std_error, ymax=mean+std_error, x=interactions, group=lvl), position =position_dodge(width = .5),width=.1) +
+  geom_point(mapping = aes(y=mean, x=interactions, group=lvl), position =position_dodge(width = .5))+
+  geom_line(mapping = aes(y=mean, x=interactions, group=lvl), position =position_dodge(width = .5))
