@@ -4,7 +4,7 @@
 # Created on: 01.02.20
 
 library('plotrix')
-# library('ggplot2')
+library('ggplot2')
 
 path <- '/home/stillsen/Documents/Uni/HiWi/Source/Drug_Analysis'
 filename <- 'reordered.csv'
@@ -79,6 +79,6 @@ detach(df)
 attach(result_df)
 
 ggplot(data = result_df) +
-  geom_errorbar(mapping = aes(ymin=mean-std_error, ymax=mean+std_error, x=interactions, group=lvl), position =position_dodge(width = .5),width=.1) +
-  geom_point(mapping = aes(y=mean, x=interactions, group=lvl), position =position_dodge(width = .5))+
-  geom_line(mapping = aes(y=mean, x=interactions, group=lvl), position =position_dodge(width = .5))
+  geom_errorbar(mapping = aes(ymin=mean-std_error,  colour=lvl, ymax=mean+std_error, x=interactions, group=lvl), position =position_dodge(width = .25),width=.1) +
+  geom_point(mapping = aes(y=mean, x=interactions, colour=lvl, group=lvl), position =position_dodge(width = .25))+
+  geom_line(mapping = aes(y=mean, x=interactions, colour=lvl, group=lvl), position =position_dodge(width = .25))
