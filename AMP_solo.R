@@ -32,3 +32,8 @@ amp_entries <- nrow(sub_df)
 amp_solo_mean <- mean( append(append(sub_df$trial_1, sub_df$trial_2), (sub_df$trial_3)))
 print(c("solo AMP records:",amp_entries))
 print(c("mean across those is: ", amp_solo_mean))
+
+
+attach(sub_df)
+
+write.csv(sub_df,'/home/stillsen/Documents/Uni/HiWi/Source/Drug_Analysis/solo_AMP_subdf.csv', row.names = FALSE)
