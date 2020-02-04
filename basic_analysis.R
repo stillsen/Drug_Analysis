@@ -77,6 +77,7 @@ result_df <- data.frame('mean' = mean_lvl,
 print(result_df)
 detach(df)
 attach(result_df)
+write.csv(result_df,'/home/stillsen/Documents/Uni/HiWi/Source/Drug_Analysis/no_interactions.csv', row.names = FALSE)
 
 ggplot(data = result_df) +
   geom_errorbar(mapping = aes(ymin=mean-std_error, ymax=mean+std_error, x=drug, group=lvl), position =position_dodge(width = .5),width=.1) +

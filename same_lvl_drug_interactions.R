@@ -78,6 +78,8 @@ print(result_df)
 detach(df)
 attach(result_df)
 
+write.csv(result_df,'/home/stillsen/Documents/Uni/HiWi/Source/Drug_Analysis/same_lvl_interactions.csv', row.names = FALSE)
+
 ggplot(data = result_df) +
   geom_errorbar(mapping = aes(ymin=mean-std_error,  colour=lvl, ymax=mean+std_error, x=interactions, group=lvl), position =position_dodge(width = .25),width=.1) +
   geom_point(mapping = aes(y=mean, x=interactions, colour=lvl, group=lvl), position =position_dodge(width = .25))+
