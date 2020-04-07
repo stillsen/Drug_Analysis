@@ -35,27 +35,19 @@ df_int <- df[, 1:8]
 df_int[is.na(df_int)] <- 0
 df <- cbind(df_int,df[,9:12])
 
-# extract features
-x <- df[1:5000,1:8]
-# x <- df[,1:8]
+# draw n random samples
+n <- 5000
+sample_row_idx <- sample(nrow(df),n)
+sub_df <- df[sample_row_idx,]
 
-# and response vector
-df_resp <- df[1:5000,9:11]
-# df_resp <- df[,9:11]
+# extract n random features
+x <- sub_df[,1:8]
+
+# and response mean vector and attach it to sub_df
+df_resp <- sub_df[,9:11]
 df_resp[is.na(df_resp)] <- 0
 y <- rowMeans(df_resp)
-
-# y <- unlist(lapply(y,trunc))
-#####3
-# y <- unlist(lapply(y, function(x) {
-#   res <- 2
-#   if (x<95)
-#     {res <- 1}
-#   if (x<85)
-#     {res <- 0}
-#   # else {res <- 1}
-#   res
-# }))
+sub_df$response <- y
 
 n.cores <- 15
 # rit.params <- list(depth=5, nchild=2, ntree=500, class.id=1, class.cut=NULL)
@@ -87,13 +79,43 @@ str_int <- lapply(idf[,1], toString)
 # splitting strings
 split_str <- lapply(str_int, strsplit, "_")
 # counting split elements
-order <- lapply(split_str, lengths)
+int_order <- lapply(split_str, lengths)
 # attach to df
-idf$order <- unlist(order)
+idf$int_order <- unlist(int_order)
 
-ggplot(data = idf) +geom_point(mapping = aes(y=interaction, x=stability), colour=order, group=order)
+ggplot(data = idf) +geom_point(mapping = aes(y=interaction, x=stability), colour=int_order, group=int_order)
+# ggsave('interaction_df_1_to_5000.pdf')
+ggsave('interaction_5000_rdm_samples.pdf')
+
+sub_idf <- idf[which(idf$stability==1 & idf$int_order==2),]
+
+# for each order 2 sample with stability score 1, plot a figure
+for (i in seq(1,nrow(sub_idf))){
+  # create a sub dataframe from sub_df (with interaction != 0) and all not interacting drugs are 0
+  # get interactions as strings
+  interaction <- unlist(strsplit(toString(sub_idf[i,1]),"_"))
+  # column names as selector
+  select <- append(interaction, "response")
+  int_resp_df <- subset(sub_df, select=select)
+  # drop 0 interactions
+  int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0),]
+  write.csv(int_resp_df,'stability1_interaction_response.csv')
+  # ggplot(data = int_resp_df)+geom_point(mapping = aes(y=response, x=AMP) , colour=FUS, group=FUS, position =position_dodge(width = .25))
+    # geom_errorbar(mapping = aes(ymin=mean-std_error,  colour=lvl, ymax=mean+std_error, x=interactions, group=lvl), position =position_dodge(width = .25),width=.1) +
+
+    # geom_line(mapping = aes(y=mean, x=interactions, colour=lvl, group=lvl), position =position_dodge(width = .25))
+}
+
+i <- 1
+interaction <- unlist(strsplit(toString(sub_idf[i,1]),"_"))
+select <- append(interaction, "response")
+int_resp_df <- subset(sub_df, select=select)
+int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0),]
+int_resp_df$int <- paste(int_resp_df[,1],int_resp_df[,2])
+
+library(dplyr)
+group_by(int_resp_df, int) %>% summarise(ResponseMean=mean(response), ResponseSD=sd(response))
 # ggplot(data = idf,aes(y=interaction, x=stability)) +geom_point( colour=order)
   # geom_errorbar(mapping = aes(ymin=mean-std_error,  colour=lvl, ymax=mean+std_error, x=interactions, group=lvl), position =position_dodge(width = .25),width=.1) +
   # geom_point(mapping = aes(y=interaction, x=stability) , colour=lvl, group=lvl), position =position_dodge(width = .25))+
   # geom_line(mapping = aes(y=mean, x=interactions, colour=lvl, group=lvl), position =position_dodge(width = .25))
-ggsave('interaction_df_1_to_5000.pdf')
