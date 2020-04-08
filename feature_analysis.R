@@ -6,6 +6,7 @@
 library('plotrix')
 library('ggplot2')
 library('iRF')
+library(dplyr)
 
 path <- '/home/stillsen/Documents/Uni/HiWi/Source/Drug_Analysis'
 filename <- 'reordered.csv'
@@ -88,34 +89,41 @@ ggplot(data = idf) +geom_point(mapping = aes(y=interaction, x=stability), colour
 ggsave('interaction_5000_rdm_samples.pdf')
 
 sub_idf <- idf[which(idf$stability==1 & idf$int_order==2),]
-
+detach(df)
+##### MAKE figures by hand
 # for each order 2 sample with stability score 1, plot a figure
 for (i in seq(1,nrow(sub_idf))){
+  print(i)
   # create a sub dataframe from sub_df (with interaction != 0) and all not interacting drugs are 0
   # get interactions as strings
   interaction <- unlist(strsplit(toString(sub_idf[i,1]),"_"))
+  print(interaction)
   # column names as selector
   select <- append(interaction, "response")
   int_resp_df <- subset(sub_df, select=select)
   # drop 0 interactions
   int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0),]
-  write.csv(int_resp_df,'stability1_interaction_response.csv')
-  # ggplot(data = int_resp_df)+geom_point(mapping = aes(y=response, x=AMP) , colour=FUS, group=FUS, position =position_dodge(width = .25))
-    # geom_errorbar(mapping = aes(ymin=mean-std_error,  colour=lvl, ymax=mean+std_error, x=interactions, group=lvl), position =position_dodge(width = .25),width=.1) +
+  # write.csv(int_resp_df,'stability1_interaction_response.csv')
+  # interaction tuple column
+  int_resp_df$int <- paste(int_resp_df[,1],int_resp_df[,2])
+  # interaction as factors
+  int_resp_df[,1] <- as.factor(int_resp_df[,1])
+  int_resp_df[,2] <- as.factor(int_resp_df[,2])
+  print("summarising")
+  # group by two variables and get statistics
+  gdf <- group_by(int_resp_df,.dots=interaction)
+  s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+  s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+  s$y_min <- s$ResponseMean-s$SEM
+  s$y_max <- s$ResponseMean+s$SEM
+  print(s)
 
-    # geom_line(mapping = aes(y=mean, x=interactions, colour=lvl, group=lvl), position =position_dodge(width = .25))
+  ggplot()+
+  geom_point(data = int_resp_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+  # geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+  geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+  geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+  file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], ".pdf", sep="_")
+  print(file_name)
+  ggsave(file_name)
 }
-
-i <- 1
-interaction <- unlist(strsplit(toString(sub_idf[i,1]),"_"))
-select <- append(interaction, "response")
-int_resp_df <- subset(sub_df, select=select)
-int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0),]
-int_resp_df$int <- paste(int_resp_df[,1],int_resp_df[,2])
-
-library(dplyr)
-group_by(int_resp_df, int) %>% summarise(ResponseMean=mean(response), ResponseSD=sd(response))
-# ggplot(data = idf,aes(y=interaction, x=stability)) +geom_point( colour=order)
-  # geom_errorbar(mapping = aes(ymin=mean-std_error,  colour=lvl, ymax=mean+std_error, x=interactions, group=lvl), position =position_dodge(width = .25),width=.1) +
-  # geom_point(mapping = aes(y=interaction, x=stability) , colour=lvl, group=lvl), position =position_dodge(width = .25))+
-  # geom_line(mapping = aes(y=mean, x=interactions, colour=lvl, group=lvl), position =position_dodge(width = .25))
