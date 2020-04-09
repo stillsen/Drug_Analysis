@@ -50,6 +50,14 @@ df_resp[is.na(df_resp)] <- 0
 y <- rowMeans(df_resp)
 sub_df$response <- y
 
+#####################################
+full_df <- df[,1:11]
+full_df[is.na(tmp_df)] <- 0
+full_df_resp <- full_df[,9:11]
+full_y <- rowMeans(full_df_resp)
+full_df$response <- full_y
+#####################################
+
 n.cores <- 15
 # rit.params <- list(depth=5, nchild=2, ntree=500, class.id=1, class.cut=NULL)
 rit.params <- list(depth=5, nchild=2, ntree=500, class.id=1, class.cut=NULL)
@@ -101,6 +109,7 @@ for (i in seq(1,nrow(sub_idf))){
   # column names as selector
   select <- append(interaction, "response")
   int_resp_df <- subset(sub_df, select=select)
+  # int_resp_df <- subset(full_df, select=select)
   # drop 0 interactions
   int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0),]
   # write.csv(int_resp_df,'stability1_interaction_response.csv')
@@ -127,3 +136,222 @@ for (i in seq(1,nrow(sub_idf))){
   print(file_name)
   ggsave(file_name)
 }
+######################################
+## AMP-FUS depending on STR
+## STR = 0 PLOT
+# create a sub dataframe from sub_df (with interaction != 0) and all not interacting drugs are 0
+# get interactions as strings
+interaction <- c("AMP","FUS","STR")
+# column names as selector
+select <- append(interaction, "response")
+int_resp_df <- subset(sub_df, select=select)
+# int_resp_df <- subset(full_df, select=select)
+# drop 0 interactions
+int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0 ),]
+# interaction as factors
+int_resp_df[,1] <- as.factor(int_resp_df[,1])
+int_resp_df[,2] <- as.factor(int_resp_df[,2])
+
+## plot for STR = 0
+int_resp_str_df <- int_resp_df[which(int_resp_df[3]==0),]
+int_resp_str_df[,3] <- as.factor(int_resp_str_df[,3])
+print("summarising")
+# group by two variables and get statistics
+gdf <- group_by(int_resp_str_df,.dots=interaction[1:2])
+s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+s$y_min <- s$ResponseMean-s$SEM
+s$y_max <- s$ResponseMean+s$SEM
+ggplot()+
+geom_point(data = int_resp_str_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+# geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+
+file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], interaction[3], "0.pdf", sep="_")
+ggsave(file_name)
+
+# create a sub dataframe from sub_df (with interaction != 0) and all not interacting drugs are 0
+# get interactions as strings
+interaction <- c("AMP","FUS","STR")
+# column names as selector
+select <- append(interaction, "response")
+int_resp_df <- subset(sub_df, select=select)
+# int_resp_df <- subset(full_df, select=select)
+# drop 0 interactions
+int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0 & int_resp_df[3]!=0),]
+# write.csv(int_resp_df,'stability1_interaction_response.csv')
+# interaction tuple column
+# int_resp_df$int <- paste(int_resp_df[,1],int_resp_df[,2])
+# interaction as factors
+int_resp_df[,1] <- as.factor(int_resp_df[,1])
+int_resp_df[,2] <- as.factor(int_resp_df[,2])
+
+## plot for STR = 1
+int_resp_str_df <- int_resp_df[which(int_resp_df[3]==1),]
+int_resp_str_df[,3] <- as.factor(int_resp_str_df[,3])
+print("summarising")
+# group by two variables and get statistics
+gdf <- group_by(int_resp_str_df,.dots=interaction[1:2])
+s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+s$y_min <- s$ResponseMean-s$SEM
+s$y_max <- s$ResponseMean+s$SEM
+ggplot()+
+geom_point(data = int_resp_str_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+# geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+
+file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], interaction[3], "1.pdf", sep="_")
+ggsave(file_name)
+
+
+
+## plot for STR = 2
+int_resp_str_df <- int_resp_df[which(int_resp_df[3]==2),]
+int_resp_str_df[,3] <- as.factor(int_resp_str_df[,3])
+print("summarising")
+# group by two variables and get statistics
+gdf <- group_by(int_resp_str_df,.dots=interaction[1:2])
+s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+s$y_min <- s$ResponseMean-s$SEM
+s$y_max <- s$ResponseMean+s$SEM
+ggplot()+
+geom_point(data = int_resp_str_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+# geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+
+file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], interaction[3], "2.pdf", sep="_")
+ggsave(file_name)
+
+## plot for STR = 3
+int_resp_str_df <- int_resp_df[which(int_resp_df[3]==3),]
+int_resp_str_df[,3] <- as.factor(int_resp_str_df[,3])
+print("summarising")
+# group by two variables and get statistics
+gdf <- group_by(int_resp_str_df,.dots=interaction[1:2])
+s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+s$y_min <- s$ResponseMean-s$SEM
+s$y_max <- s$ResponseMean+s$SEM
+ggplot()+
+geom_point(data = int_resp_str_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+# geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+
+file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], interaction[3], "3.pdf", sep="_")
+ggsave(file_name)
+
+######################################
+## AMP-STR depending on FUS
+## FUS = 0 PLOT
+# create a sub dataframe from sub_df (with interaction != 0) and all not interacting drugs are 0
+# get interactions as strings
+interaction <- c("AMP","STR","FUS")
+# column names as selector
+select <- append(interaction, "response")
+int_resp_df <- subset(sub_df, select=select)
+# int_resp_df <- subset(full_df, select=select)
+# drop 0 interactions
+int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0 ),]
+# interaction as factors
+int_resp_df[,1] <- as.factor(int_resp_df[,1])
+int_resp_df[,2] <- as.factor(int_resp_df[,2])
+
+## plot for STR = 0
+int_resp_str_df <- int_resp_df[which(int_resp_df[3]==0),]
+int_resp_str_df[,3] <- as.factor(int_resp_str_df[,3])
+print("summarising")
+# group by two variables and get statistics
+gdf <- group_by(int_resp_str_df,.dots=interaction[1:2])
+s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+s$y_min <- s$ResponseMean-s$SEM
+s$y_max <- s$ResponseMean+s$SEM
+ggplot()+
+geom_point(data = int_resp_str_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+# geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+
+file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], interaction[3], "0.pdf", sep="_")
+ggsave(file_name)
+
+# create a sub dataframe from sub_df (with interaction != 0) and all not interacting drugs are 0
+# get interactions as strings
+interaction <- c("AMP","STR","FUS")
+# column names as selector
+select <- append(interaction, "response")
+int_resp_df <- subset(sub_df, select=select)
+# int_resp_df <- subset(full_df, select=select)
+# drop 0 interactions
+int_resp_df <- int_resp_df[which(int_resp_df[1]!=0 & int_resp_df[2]!=0 & int_resp_df[3]!=0),]
+# write.csv(int_resp_df,'stability1_interaction_response.csv')
+# interaction tuple column
+# int_resp_df$int <- paste(int_resp_df[,1],int_resp_df[,2])
+# interaction as factors
+int_resp_df[,1] <- as.factor(int_resp_df[,1])
+int_resp_df[,2] <- as.factor(int_resp_df[,2])
+
+## plot for FUS = 1
+int_resp_str_df <- int_resp_df[which(int_resp_df[3]==1),]
+int_resp_str_df[,3] <- as.factor(int_resp_str_df[,3])
+print("summarising")
+# group by two variables and get statistics
+gdf <- group_by(int_resp_str_df,.dots=interaction[1:2])
+s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+s$y_min <- s$ResponseMean-s$SEM
+s$y_max <- s$ResponseMean+s$SEM
+ggplot()+
+geom_point(data = int_resp_str_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+# geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+
+file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], interaction[3], "1.pdf", sep="_")
+ggsave(file_name)
+
+
+
+## plot for FUS = 2
+int_resp_str_df <- int_resp_df[which(int_resp_df[3]==2),]
+int_resp_str_df[,3] <- as.factor(int_resp_str_df[,3])
+print("summarising")
+# group by two variables and get statistics
+gdf <- group_by(int_resp_str_df,.dots=interaction[1:2])
+s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+s$y_min <- s$ResponseMean-s$SEM
+s$y_max <- s$ResponseMean+s$SEM
+ggplot()+
+geom_point(data = int_resp_str_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+# geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+
+file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], interaction[3], "2.pdf", sep="_")
+ggsave(file_name)
+
+## plot for FUS = 3
+int_resp_str_df <- int_resp_df[which(int_resp_df[3]==3),]
+int_resp_str_df[,3] <- as.factor(int_resp_str_df[,3])
+print("summarising")
+# group by two variables and get statistics
+gdf <- group_by(int_resp_str_df,.dots=interaction[1:2])
+s <- summarise(gdf,ResponseMean=mean(response), ResponseSD=sd(response), GroupCount=n())
+s$SEM <- s$ResponseSD/sqrt(s$GroupCount)
+s$y_min <- s$ResponseMean-s$SEM
+s$y_max <- s$ResponseMean+s$SEM
+ggplot()+
+geom_point(data = int_resp_str_df, aes_string(y="response", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+# geom_line(data = s, mapping = aes(y=ResponseMean, x=s[,1], colour=s[,2], group=s[,2]), position =position_dodge(width = .25))+
+geom_line(data = s, aes_string(y="ResponseMean", x=interaction[1], colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25))+
+geom_errorbar(data = s, aes_string(ymin="y_min", ymax="y_max", x=interaction[1],colour=interaction[2], group=interaction[2]), position =position_dodge(width = .25),width=.3)
+
+file_name <- paste("interaction_response_5000_rdm_samples_", interaction[1], interaction[2], interaction[3], "3.pdf", sep="_")
+ggsave(file_name)
